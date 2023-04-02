@@ -81,10 +81,9 @@ class Fen(Scene):
         self.play(ReplacementTransform(board_unicode, board_anscii))
         #self.wait()
         board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
-        board_anscii_delimited[0].set_color(YELLOW)
-        self.remove(board_anscii)
         self.add(board_anscii_delimited)
-        #self.play(TransformMatchingShapes(board_anscii, board_anscii_delimited))
+        self.wait()
+        self.play(TransformMatchingShapes(board_anscii, board_anscii_delimited))
         self.wait()
         board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
         self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
@@ -94,6 +93,18 @@ class Fen(Scene):
         board_colored_epd = colored_epd(board)
         self.wait()
         self.play(TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd, run_time=3))
+
+class Test(Scene):
+    def construct(self):
+        #Text.set_default(font="Andale Mono")
+        line0 = Text('♖ ♘ ♗ . ♔ . . ♖', font="Andale Mono")
+        line1 = Text('. ♙ ♕ . ♗ ♙ ♙ ♙', font="Andale Mono")
+        line2 = Text('♙ . . ♙ ♙ ♘ . .', font="Andale Mono")
+        g = VGroup(VGroup(line0, Text("")).arrange(RIGHT), VGroup(line1, Text("")).arrange(RIGHT), line2).arrange(DOWN)
+        self.add(g)
+        self.wait()
+        g2 = VGroup(VGroup(line0, Text("/")).arrange(RIGHT), VGroup(line1, Text("/")).arrange(RIGHT), line2).arrange(DOWN)
+        self.play(ReplacementTransform(g, g2))
 
 # def main() -> None:
 #     parser = argparse.ArgumentParser()

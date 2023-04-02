@@ -48,10 +48,6 @@ log.addHandler(handler_2)
 # Classes #
 ###########
 
-def batched(iterable, chunk_size):
-    iterator = iter(iterable)
-    while chunk := tuple(islice(iterator, chunk_size)):
-        yield chunk
 
 def with_delimiter(board) -> str:
     return board.__str__().replace("\n", "/\n")
@@ -61,6 +57,27 @@ def one_line(board) -> str:
 
 def colored_epd(board):
     return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)}) #font_size=27)
+
+
+def anscii_board(board) -> (List[Text], VGroup):
+    """given a board, return a VGroup with each board line consisting of a sub VGroup with an empty ending, to allow smoother animation"""
+    board_lines = [Text(i, font="Andale Mono", width=810) for i in board.__str__().split("\n")]
+    g = VGroup(*[VGroup(line, Text("")).arrange(RIGHT) for line in board_lines]).arrange(DOWN)
+    return (board_lines, g)
+
+def anscii_board_delimited(board_lines: List[Text]) -> VGroup:
+    g = VGroup(*[VGroup(line, Text("/", color=ORANGE)).arrange(RIGHT) for line in board_lines[:-1]])
+    g += VGroup(board_lines[-1], Text("")).arrange(RIGHT)
+    g.arrange(DOWN)
+    return g
+
+def one_line_board(board_lines: List[Text]) -> VGroup:
+    g = VGroup(*[VGroup(line, Text("/", color=ORANGE)).arrange(RIGHT) for line in board_lines[:-1]])
+    g += VGroup(board_lines[-1], Text("")).arrange(RIGHT)
+    g.arrange(RIGHT)
+    for line in board_lines:
+        line.font_size = 16
+    return g
 
 class Fen(Scene):
     def construct(self):
@@ -73,20 +90,21 @@ class Fen(Scene):
         board_svg = SVGMobject("board.svg", width=7)
         self.add(board_svg)
         #self.wait()
-        #self.play(FadeOut(board_svg))
         board_unicode = Text(board.unicode(empty_square=".", invert_color=True), font="Andale Mono", width=810) # Courier New, Optima, Other mono
         self.play(FadeOut(board_svg), FadeIn(board_unicode))
         #self.wait()
-        board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
+        #board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
+        board_lines, board_anscii = anscii_board(board)
         self.play(ReplacementTransform(board_unicode, board_anscii))
         #self.wait()
-        board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
+        # board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
+        board_anscii_delimited =  anscii_board_delimited(board_lines)
         #self.add(board_anscii_delimited)
         self.wait()
-        self.play(TransformMatchingShapes(board_anscii, board_anscii_delimited))
+        self.play(ReplacementTransform(board_anscii, board_anscii_delimited))
         self.wait()
-        board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
-        self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
+        board_anscii_oneline = one_line_board(board_lines)
+        self.play(TransformMatchingShapes(board_anscii_delimited, board_anscii_oneline, run_time=5))
         self.wait()
         board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE}) #font_size=20)
         self.play(ReplacementTransform(board_anscii_oneline, board_anscii_oneline_blue_dot))

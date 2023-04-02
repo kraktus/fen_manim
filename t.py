@@ -81,7 +81,7 @@ class Fen(Scene):
         self.play(ReplacementTransform(board_unicode, board_anscii))
         #self.wait()
         board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
-        self.add(board_anscii_delimited)
+        #self.add(board_anscii_delimited)
         self.wait()
         self.play(TransformMatchingShapes(board_anscii, board_anscii_delimited))
         self.wait()

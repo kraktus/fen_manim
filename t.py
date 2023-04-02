@@ -53,8 +53,16 @@ def batched(iterable, chunk_size):
     while chunk := tuple(islice(iterator, chunk_size)):
         yield chunk
 
+def with_delimiter(board) -> str:
+    return board.__str__().replace("\n", "/\n")
 
-class SquareToCircle(Scene):
+def one_line(board) -> str:
+    return board.__str__().replace("\n", "/").replace(" ", "")
+
+def colored_epd(board):
+    return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)}) #font_size=27)
+
+class Fen(Scene):
     def construct(self):
         board = chess.Board(fen="rnb1k2r/1pq1bppp/p2ppn2/6B1/3NPP2/2N2Q2/PPP3PP/2KR1B1R b kq - 4 9")
         empty = chess.Board(fen=None)
@@ -62,26 +70,29 @@ class SquareToCircle(Scene):
             f.write(chess.svg.board(empty))
         with open("board.svg", "w") as f:
             f.write(chess.svg.board(board))
-        #board_svg = ImageMobject("fen.png")
         board_svg = SVGMobject("board.svg", width=7)
-        board_unicode = board.unicode(empty_square=".", invert_color=True)
         self.add(board_svg)
         #self.wait()
         #self.play(FadeOut(board_svg))
-        # for fonts in batched(manimpango.list_fonts(), 4):
-        #     g = VGroup()
-        #     for font in fonts:
-        #         g += VGroup(Text(board_unicode, font=font, width=300), Text(font)).arrange(DOWN)
-        #     g.arrange(RIGHT)
-        #     self.play(FadeIn(g))
-        #     self.wait()
-        #     self.remove(g)
-        fen_debug = Text(board_unicode, font="Andale Mono", width=810) # Courier New, Optima, Other mono, 
-        
-        
-        #g = VGroup(Text(". p q . b p p p"), Text(". . . . . . B .")).arrange(DOWN)
-        self.add(fen_debug)
-        print()
+        board_unicode = Text(board.unicode(empty_square=".", invert_color=True), font="Andale Mono", width=810) # Courier New, Optima, Other mono
+        self.play(FadeOut(board_svg), FadeIn(board_unicode))
+        #self.wait()
+        board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
+        self.play(ReplacementTransform(board_unicode, board_anscii))
+        #self.wait()
+        board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
+        self.remove(board_anscii)
+        self.add(board_anscii_delimited)
+        #self.play(TransformMatchingShapes(board_anscii, board_anscii_delimited))
+        self.wait()
+        board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
+        self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
+        self.wait()
+        board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE}) #font_size=20)
+        self.play(ReplacementTransform(board_anscii_oneline, board_anscii_oneline_blue_dot))
+        board_colored_epd = colored_epd(board)
+        self.wait()
+        self.play(TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd, run_time=3))
 
 # def main() -> None:
 #     parser = argparse.ArgumentParser()

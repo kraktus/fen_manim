@@ -75,7 +75,8 @@ def one_line_bluedots(board) -> (List[Text], VGroup):
                 if starting_piece_part is None: # We're at the beginning of the FEN
                     starting_piece_part = i
                 if starting_dot_part is not None:
-                    dot_part = Text(one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
+                    # evil zero width space inserted to get dots to the same height as other characters
+                    dot_part = Text('\u200B' + one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
                     g += dot_part
                     parts.append(dot_part)
                     starting_dot_part = None
@@ -89,8 +90,20 @@ def one_line_bluedots(board) -> (List[Text], VGroup):
                     g += piece_part
                     starting_piece_part = None
                     starting_dot_part = i
-    g.arrange(RIGHT)
+    g.arrange_in_grid(cols=len(parts),row_alignments='d')
     return (parts, g)
+
+def replace_dots(parts: List[Text]) -> VGroup:
+    g = VGroup()
+    for part in parts:
+        if "." in part.text:
+            x = Text(str(len(part.text)), font="Andale Mono", color=BLUE)
+            x.scale(0.4)
+            g += x
+        else:
+            g += part.copy()
+    g.arrange_in_grid(cols=len(parts),row_alignments='d',buff=0.1)
+    return g
 
 def anscii_board(board) -> (List[Text], VGroup):
     """given a board, return a VGroup with each board line consisting of a sub VGroup with an empty ending, to allow smoother animation when adding slashes at the end"""
@@ -121,38 +134,40 @@ class Fen(Scene):
         with open("board.svg", "w") as f:
             f.write(chess.svg.board(board))
         board_svg = SVGMobject("board.svg", width=7)
-        self.add(board_svg)
+        #self.add(board_svg)
         #self.wait()
         board_unicode = Text(board.unicode(empty_square=".", invert_color=True), **text_config()) # Courier New, Optima, Other mono
-        self.play(FadeOut(board_svg), FadeIn(board_unicode))
+        #self.play(FadeOut(board_svg), FadeIn(board_unicode))
         #self.wait()
         #board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
         board_lines, board_anscii = anscii_board(board)
         board_anscii_one_part = Text(board.__str__(),  **text_config())
-        self.play(ReplacementTransform(board_unicode, board_anscii_one_part))
+        #self.play(ReplacementTransform(board_unicode, board_anscii_one_part))
         #self.remove(board_anscii_one_part)
         #self.add(board_anscii)
         #self.wait()
         board_anscii_delimited = Text(with_delimiter(board), t2c={'/': ORANGE}, **text_config(width=6.52))
         #board_anscii_delimited =  anscii_board_delimited(board_lines)
         #self.add(board_anscii_delimited)
-        self.wait()
-        self.play(TransformMatchingShapes(board_anscii_one_part, board_anscii_delimited))
-        self.wait()
+        #self.wait()
+        #self.play(TransformMatchingShapes(board_anscii_one_part, board_anscii_delimited))
+        #self.wait()
         # self.play(board_anscii_delimited.animate.arrange(RIGHT))
-        self.play(board_anscii_delimited.animate.scale(0.4))
+        #self.play(board_anscii_delimited.animate.scale(0.4))
         board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
         board_anscii_oneline.scale(0.4)
-        self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
-        self.wait()
-        #board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE})
-        _, board_anscii_oneline_blue_dot = one_line_bluedots(board)
+        #self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
+        #self.wait()
+        board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE})
+        #parts, board_anscii_oneline_blue_dot = one_line_bluedots(board)
         board_anscii_oneline_blue_dot.scale(0.4)
-        self.play(ReplacementTransform(board_anscii_oneline, board_anscii_oneline_blue_dot))
+        #elf.play(TransformMatchingShapes(board_anscii_oneline, board_anscii_oneline_blue_dot))
+        self.add(board_anscii_oneline_blue_dot)
         board_colored_epd = colored_epd(board)
         board_colored_epd.scale(0.4)
+        #board_colored_epd = replace_dots(parts)
         self.wait()
-        self.play(TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd, run_time=3))
+        self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=5))
 
 class Test(Scene):
     def construct(self):
@@ -165,6 +180,30 @@ class Test(Scene):
         self.wait()
         g2 = VGroup(VGroup(line0, Text("/")).arrange(RIGHT), VGroup(line1, Text("/")).arrange(RIGHT), line2).arrange(DOWN)
         self.play(ReplacementTransform(g, g2))
+
+class Dots(Scene):
+    def construct(self):
+        #Text.set_default(font="Andale Mono")
+        Text.set_default(font="Andale Mono") 
+        line0 = Text('....B./')
+        line1 = VGroup(Text('....'), Text('B'), Text('.'), Text('/')).arrange_in_grid(cols=4,row_alignments='d')
+        line2 = VGroup(Text('4', color=BLUE), Text('B'), Text('1', color=BLUE), Text('/')).arrange_in_grid(cols=4,row_alignments='d')
+        self.add(line0)
+        self.wait()
+        self.play(TransformMatchingShapes(line0, line1, run_time=0.1)) # ideally imperceptible
+        self.wait()
+        self.play(ReplacementTransform(line1, line2))
+
+class DotsTex(Scene):
+    def construct(self):
+        #Text.set_default(font="Andale Mono")
+        Text.set_default(font="Andale Mono") 
+        line0 = Tex('....B./')
+        #line1 = VGroup(Text('....'), Text('B'), Text('.'), Text('/')).arrange_in_grid(cols=4,row_alignments='d')
+        line2 = Tex('4B1/')
+        self.add(line0)
+        self.wait()
+        self.play(TransformMatchingTex(line0, line2))
 
 # def main() -> None:
 #     parser = argparse.ArgumentParser()

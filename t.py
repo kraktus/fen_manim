@@ -15,7 +15,7 @@ import manimpango
 from pathlib import Path
 from itertools import islice
 from typing import Optional, List, Union, Tuple
-from manimlib import *
+from manim import *
 
 #############
 # Constants #
@@ -95,7 +95,10 @@ class Fen(Scene):
         #self.wait()
         #board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
         board_lines, board_anscii = anscii_board(board)
-        self.play(ReplacementTransform(board_unicode, board_anscii))
+        board_anscii_one_part = Text(board.__str__(), font="Andale Mono", width=810)
+        self.play(ReplacementTransform(board_unicode, board_anscii_one_part))
+        self.remove(board_anscii_one_part)
+        self.add(board_anscii)
         #self.wait()
         # board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
         board_anscii_delimited =  anscii_board_delimited(board_lines)
@@ -103,9 +106,10 @@ class Fen(Scene):
         self.wait()
         self.play(ReplacementTransform(board_anscii, board_anscii_delimited))
         self.wait()
+        self.play(board_anscii_delimited.animate.arrange(RIGHT))
         board_anscii_oneline = one_line_board(board_lines)
-        self.play(TransformMatchingShapes(board_anscii_delimited, board_anscii_oneline, run_time=5))
-        self.wait()
+        #self.play(TransformMatchingShapes(board_anscii_delimited, board_anscii_oneline, run_time=5))
+        self.wait(5)
         board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE}) #font_size=20)
         self.play(ReplacementTransform(board_anscii_oneline, board_anscii_oneline_blue_dot))
         board_colored_epd = colored_epd(board)
@@ -117,7 +121,7 @@ class Test(Scene):
         #Text.set_default(font="Andale Mono")
         line0 = Text('♖ ♘ ♗ . ♔ . . ♖', font="Andale Mono")
         line1 = Text('. ♙ ♕ . ♗ ♙ ♙ ♙', font="Andale Mono")
-        line2 = Text('♙ . . ♙ ♙ ♘ . .', font="Andale Mono")
+        line2 = VGroup(Text('♙', font="Andale Mono"), Text(' . . ', font="Andale Mono"), Text('♙ ♙ ♘ . .', font="Andale Mono")).arrange(RIGHT)
         g = VGroup(VGroup(line0, Text("")).arrange(RIGHT), VGroup(line1, Text("")).arrange(RIGHT), line2).arrange(DOWN)
         self.add(g)
         self.wait()

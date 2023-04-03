@@ -75,8 +75,7 @@ def one_line_bluedots(board) -> (List[Text], VGroup):
                 if starting_piece_part is None: # We're at the beginning of the FEN
                     starting_piece_part = i
                 if starting_dot_part is not None:
-                    # evil zero width space inserted to get dots to the same height as other characters
-                    dot_part = Text('\u200B' + one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
+                    dot_part = Text(one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
                     g += dot_part
                     parts.append(dot_part)
                     starting_dot_part = None

@@ -23,6 +23,7 @@ from manim import *
 
 LOG_PATH = f"{__file__}.log"
 
+SCALE = 0.4
 
 ########
 # Logs #
@@ -70,25 +71,41 @@ def one_line_bluedots(board) -> (List[Text], VGroup):
     starting_piece_part = None # Optional[int]
     parts = []
     g = VGroup()
+    def on_piece(g: VGroup, x: int):
+        nonlocal starting_piece_part
+        nonlocal starting_dot_part
+        if starting_piece_part is None: # We're at the beginning of a piece sequence
+            starting_piece_part = x
+        if starting_dot_part is not None:
+            dot_part = Text(one_line[starting_dot_part:x], font="Andale Mono", color=BLUE)
+            g += dot_part
+            parts.append(dot_part)
+            starting_dot_part = None
+            starting_piece_part = x
+
+    def on_dot(g: VGroup, x: int):
+        nonlocal starting_piece_part
+        nonlocal starting_dot_part
+        if starting_dot_part is None: # We're at the beginning of a dot sequence
+            starting_dot_part = x
+        if starting_piece_part is not None:
+            piece_part = Text(one_line[starting_piece_part:x], font="Andale Mono")
+            parts.append(piece_part)
+            g += piece_part
+            starting_piece_part = None
+            starting_dot_part = x
+
     for (i, char) in enumerate(one_line):
         if char != ".":
-                if starting_piece_part is None: # We're at the beginning of the FEN
-                    starting_piece_part = i
-                if starting_dot_part is not None:
-                    dot_part = Text(one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
-                    g += dot_part
-                    parts.append(dot_part)
-                    starting_dot_part = None
-                    starting_piece_part = i
-        if char == ".":
-                if starting_dot_part is None: # We're at the beginning of the FEN
-                    starting_dot_part = i
-                if starting_piece_part is not None:
-                    piece_part = Text(one_line[starting_piece_part:i], font="Andale Mono")
-                    parts.append(piece_part)
-                    g += piece_part
-                    starting_piece_part = None
-                    starting_dot_part = i
+            on_piece(g, i)
+        else:
+            on_dot(g, i)
+    # to close the last part
+    if one_line[-1] == ".":
+        # call on_piece when it's a dot to finish the last piece part
+        on_piece(g, len(one_line))
+    else:
+        on_dot(g, len(one_line))
     g.arrange_in_grid(cols=len(parts),row_alignments='d')
     return (parts, g)
 
@@ -97,11 +114,11 @@ def replace_dots(parts: List[Text]) -> VGroup:
     for part in parts:
         if "." in part.text:
             x = Text(str(len(part.text)), font="Andale Mono", color=BLUE)
-            x.scale(0.4)
+            x.scale(SCALE)
             g += x
         else:
             g += part.copy()
-    g.arrange_in_grid(cols=len(parts),row_alignments='d',buff=0.1)
+    g.arrange_in_grid(cols=len(parts),row_alignments='d',buff=0.05)
     return g
 
 def anscii_board(board) -> (List[Text], VGroup):
@@ -152,21 +169,23 @@ class Fen(Scene):
         #self.play(TransformMatchingShapes(board_anscii_one_part, board_anscii_delimited))
         #self.wait()
         # self.play(board_anscii_delimited.animate.arrange(RIGHT))
-        #self.play(board_anscii_delimited.animate.scale(0.4))
-        board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
-        board_anscii_oneline.scale(0.4)
+        #self.play(board_anscii_delimited.animate.scale(SCALE))
+        #board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
+        #board_anscii_oneline.scale(SCALE)
         #self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
         #self.wait()
-        board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE})
-        #parts, board_anscii_oneline_blue_dot = one_line_bluedots(board)
-        board_anscii_oneline_blue_dot.scale(0.4)
+        #board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE})
+        parts, board_anscii_oneline_blue_dot = one_line_bluedots(board)
+        board_anscii_oneline_blue_dot.scale(SCALE)
         #elf.play(TransformMatchingShapes(board_anscii_oneline, board_anscii_oneline_blue_dot))
         self.add(board_anscii_oneline_blue_dot)
-        board_colored_epd = colored_epd(board)
-        board_colored_epd.scale(0.4)
-        #board_colored_epd = replace_dots(parts)
+        board_colored_epd_final = colored_epd(board)
+        board_colored_epd_final.scale(SCALE)
+        board_colored_epd = replace_dots(parts)
         self.wait()
-        self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=5))
+        self.play(AnimationGroup(Transform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2), TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd_final, run_time=2)))
+        #self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
+        #self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final, run_time=0.5))
 
 class Test(Scene):
     def construct(self):

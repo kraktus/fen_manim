@@ -183,9 +183,8 @@ class Fen(Scene):
         board_colored_epd_final.scale(SCALE)
         board_colored_epd = replace_dots(parts)
         self.wait()
-        self.play(AnimationGroup(Transform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2), TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd_final, run_time=2)))
-        #self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
-        #self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final, run_time=0.5))
+        self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
+        self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final))
 
 class Test(Scene):
     def construct(self):

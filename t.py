@@ -24,8 +24,6 @@ from manim import *
 LOG_PATH = f"{__file__}.log"
 
 
-TEXT_CONFIG = {'font': "Andale Mono", 'width': 6, 'line_spacing': 0.6}
-
 ########
 # Logs #
 ########
@@ -52,6 +50,9 @@ log.addHandler(handler_2)
 ###########
 
 
+def text_config(font="Andale Mono",width=6,line_spacing=0.6):
+    return {'font': font, 'width': width, 'line_spacing': line_spacing}
+
 def with_delimiter(board) -> str:
     return board.__str__().replace("\n", "/\n")
 
@@ -63,7 +64,7 @@ def colored_epd(board):
 
 
 def anscii_board(board) -> (List[Text], VGroup):
-    """given a board, return a VGroup with each board line consisting of a sub VGroup with an empty ending, to allow smoother animation"""
+    """given a board, return a VGroup with each board line consisting of a sub VGroup with an empty ending, to allow smoother animation when adding slashes at the end"""
     board_lines = [Text(i, font="Andale Mono") for i in board.__str__().split("\n")]
     g = VGroup(*[VGroup(line, Text("")).arrange(RIGHT) for line in board_lines]).arrange(DOWN)
     return (board_lines, g)
@@ -93,21 +94,21 @@ class Fen(Scene):
         board_svg = SVGMobject("board.svg", width=7)
         self.add(board_svg)
         #self.wait()
-        board_unicode = Text(board.unicode(empty_square=".", invert_color=True), **TEXT_CONFIG) # Courier New, Optima, Other mono
+        board_unicode = Text(board.unicode(empty_square=".", invert_color=True), **text_config()) # Courier New, Optima, Other mono
         self.play(FadeOut(board_svg), FadeIn(board_unicode))
         #self.wait()
         #board_anscii = Text(board.__str__(), font="Andale Mono", width=810)
         board_lines, board_anscii = anscii_board(board)
-        board_anscii_one_part = Text(board.__str__(),  **TEXT_CONFIG)
+        board_anscii_one_part = Text(board.__str__(),  **text_config())
         self.play(ReplacementTransform(board_unicode, board_anscii_one_part))
-        self.remove(board_anscii_one_part)
-        self.add(board_anscii)
+        #self.remove(board_anscii_one_part)
+        #self.add(board_anscii)
         #self.wait()
-        # board_anscii_delimited = Text(with_delimiter(board), font="Andale Mono", width=870, t2c={'/': ORANGE})
-        board_anscii_delimited =  anscii_board_delimited(board_lines)
+        board_anscii_delimited = Text(with_delimiter(board), t2c={'/': ORANGE}, **text_config(width=6.52))
+        #board_anscii_delimited =  anscii_board_delimited(board_lines)
         #self.add(board_anscii_delimited)
         self.wait()
-        self.play(ReplacementTransform(board_anscii, board_anscii_delimited))
+        self.play(TransformMatchingShapes(board_anscii_one_part, board_anscii_delimited))
         self.wait()
         self.play(board_anscii_delimited.animate.arrange(RIGHT))
         board_anscii_oneline = one_line_board(board_lines)

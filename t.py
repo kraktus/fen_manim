@@ -63,6 +63,35 @@ def colored_epd(board):
     return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)}) #font_size=27)
 
 
+def one_line_bluedots(board) -> (List[Text], VGroup):
+    """try to put dots in their own Text Node for finer grained animation"""
+    one_line = board.__str__().replace("\n", "/").replace(" ", "")
+    starting_dot_part = None # Optional[int]
+    starting_piece_part = None # Optional[int]
+    parts = []
+    g = VGroup()
+    for (i, char) in enumerate(one_line):
+        if char != ".":
+                if starting_piece_part is None: # We're at the beginning of the FEN
+                    starting_piece_part = i
+                if starting_dot_part is not None:
+                    dot_part = Text(one_line[starting_dot_part:i], font="Andale Mono", color=BLUE)
+                    g += dot_part
+                    parts.append(dot_part)
+                    starting_dot_part = None
+                    starting_piece_part = i
+        if char == ".":
+                if starting_dot_part is None: # We're at the beginning of the FEN
+                    starting_dot_part = i
+                if starting_piece_part is not None:
+                    piece_part = Text(one_line[starting_piece_part:i], font="Andale Mono")
+                    parts.append(piece_part)
+                    g += piece_part
+                    starting_piece_part = None
+                    starting_dot_part = i
+    g.arrange(RIGHT)
+    return (parts, g)
+
 def anscii_board(board) -> (List[Text], VGroup):
     """given a board, return a VGroup with each board line consisting of a sub VGroup with an empty ending, to allow smoother animation when adding slashes at the end"""
     board_lines = [Text(i, font="Andale Mono") for i in board.__str__().split("\n")]
@@ -110,13 +139,18 @@ class Fen(Scene):
         self.wait()
         self.play(TransformMatchingShapes(board_anscii_one_part, board_anscii_delimited))
         self.wait()
-        self.play(board_anscii_delimited.animate.arrange(RIGHT))
-        board_anscii_oneline = one_line_board(board_lines)
-        #self.play(TransformMatchingShapes(board_anscii_delimited, board_anscii_oneline, run_time=5))
-        self.wait(5)
-        board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE}) #font_size=20)
+        # self.play(board_anscii_delimited.animate.arrange(RIGHT))
+        self.play(board_anscii_delimited.animate.scale(0.4))
+        board_anscii_oneline = Text(one_line(board), font="Andale Mono", t2c={'/': ORANGE})
+        board_anscii_oneline.scale(0.4)
+        self.play(ReplacementTransform(board_anscii_delimited, board_anscii_oneline))
+        self.wait()
+        #board_anscii_oneline_blue_dot = Text(one_line(board), font="Andale Mono", t2c={'.': BLUE})
+        _, board_anscii_oneline_blue_dot = one_line_bluedots(board)
+        board_anscii_oneline_blue_dot.scale(0.4)
         self.play(ReplacementTransform(board_anscii_oneline, board_anscii_oneline_blue_dot))
         board_colored_epd = colored_epd(board)
+        board_colored_epd.scale(0.4)
         self.wait()
         self.play(TransformMatchingShapes(board_anscii_oneline_blue_dot, board_colored_epd, run_time=3))
 

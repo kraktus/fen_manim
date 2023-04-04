@@ -63,6 +63,14 @@ def one_line(board) -> str:
 def colored_epd(board):
     return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)} | {'/': ORANGE}) #font_size=27)
 
+def brace_of(x, caption: str, color, direction=UP):
+    brace = Brace(x, direction=direction, color=color)
+    if direction == UP:
+        brace.stretch(-1,0)
+    brace_caption = Text("Board", font="Andale Mono", color=color)
+    brace_caption.scale(SCALE + 0.1)
+    brace_caption.next_to(brace, direction)
+    return brace, brace_caption
 
 def one_line_bluedots(board) -> (List[Text], VGroup):
     """try to put dots in their own Text Node for finer grained animation"""
@@ -186,11 +194,10 @@ class Fen(Scene):
         self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final))
         self.play(board_colored_epd_final.animate.set_color(WHITE).shift(2 * LEFT))
         board_brace = Brace(board_colored_epd_final, direction=UP, color=GREEN)
-        board_brace
+        board_brace.stretch(-1,0)
         board_caption = Text("Board", font="Andale Mono", color=GREEN)
         board_caption.scale(SCALE + 0.1)
         board_caption.next_to(board_brace, UP)
-        board_group = VGroup(board_caption, board_brace)
         self.play(AnimationGroup(board_colored_epd_final.animate.set_color(GREEN),Write(board_caption,run_time=1),Write(board_brace, run_time=1), lag_ratio=0.4))
         turn = Text(fen.split(" ")[1], font="Andale Mono")
         turn.next_to(board_colored_epd_final, RIGHT)
@@ -201,17 +208,19 @@ class Fen(Scene):
         ep = Text(fen.split(" ")[3])
         ep.next_to(castling, RIGHT)
         ep.scale(SCALE)
-        metadata = Text(" ".join(fen.split(" ")[1:]), font="Andale Mono")
-        metadata.next_to(ep, RIGHT)
+        metadata = Text(" ".join(fen.split(" ")[4:]), font="Andale Mono")
+        metadata.next_to(ep, RIGHT,buff=0)
         metadata.scale(SCALE)
         self.play(
-            Succession(
+            AnimationGroup(
                 FadeIn(turn, shift=DOWN), 
                 FadeIn(castling, shift=DOWN), 
                 FadeIn(ep, shift=DOWN), 
-                FadeIn(metadata, shift=DOWN)
+                FadeIn(metadata, shift=DOWN),
+                lag_ratio=0.4
                 )
             )
+        self.play()
 
 class Test(Scene):
     def construct(self):

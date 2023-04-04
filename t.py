@@ -63,13 +63,13 @@ def one_line(board) -> str:
 def colored_epd(board):
     return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)} | {'/': ORANGE}) #font_size=27)
 
-def brace_of(x, caption: str, color, direction=UP):
+def brace_of(x, caption: str, color, direction=UP, buff=0.25):
     brace = Brace(x, direction=direction, color=color)
     if direction.all() == UP.all():
         brace.stretch(-1,0)
-    brace_caption = Text("Board", font="Andale Mono", color=color)
+    brace_caption = Text(caption, font="Andale Mono", color=color)
     brace_caption.scale(SCALE + 0.1)
-    brace_caption.next_to(brace, direction)
+    brace_caption.next_to(brace, direction, buff=buff)
     return brace, brace_caption
 
 # TODO, refactor must be easier way
@@ -194,8 +194,6 @@ class Fen(Scene):
         self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
         self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final))
         self.play(board_colored_epd_final.animate.set_color(WHITE).shift(2 * LEFT))
-        board_brace, board_caption = brace_of(board_colored_epd_final, "Board", color=GREEN)
-        self.play(AnimationGroup(board_colored_epd_final.animate.set_color(GREEN),Write(board_caption,run_time=1),Write(board_brace, run_time=1), lag_ratio=0.4))
         turn = Text(fen.split(" ")[1], font="Andale Mono")
         turn.next_to(board_colored_epd_final, RIGHT)
         turn.scale(SCALE)
@@ -205,18 +203,33 @@ class Fen(Scene):
         ep = Text(fen.split(" ")[3])
         ep.next_to(castling, RIGHT)
         ep.scale(SCALE)
-        metadata = Text(" ".join(fen.split(" ")[4:]), font="Andale Mono")
-        metadata.next_to(ep, RIGHT,buff=0)
-        metadata.scale(SCALE)
+        counters = Text(" ".join(fen.split(" ")[4:]), font="Andale Mono")
+        counters.next_to(ep, RIGHT,buff=0)
+        counters.scale(SCALE)
         self.play(
             AnimationGroup(
                 FadeIn(turn, shift=DOWN), 
                 FadeIn(castling, shift=DOWN), 
                 FadeIn(ep, shift=DOWN), 
-                FadeIn(metadata, shift=DOWN),
+                FadeIn(counters, shift=DOWN),
                 lag_ratio=0.4
                 )
             )
+        self.play(
+            AnimationGroup(
+                self.add_brace(board_colored_epd_final, "Board", direction=UP,color=GREEN),
+                self.add_brace(turn, "Turn", direction=DOWN,color=ORANGE),
+                self.add_brace(castling, "Castling", direction=UP,color=BLUE),
+                self.add_brace(ep, "En-passant", direction=DOWN,color=PINK,buff=0),
+                self.add_brace(counters, "Counters", direction=UP,color=LIGHT_GREY,buff=0.7),
+                lag_ratio=0.9,
+                )
+        )
+        self.wait()
+
+    def add_brace(self, of, caption, direction, color, buff=0.25):
+        brace, caption = brace_of(of, caption, direction=direction,color=color,buff=buff)
+        return AnimationGroup(of.animate.set_color(color),Write(caption,run_time=1),Write(brace, run_time=1), lag_ratio=0.4)
 
 class Test(Scene):
     def construct(self):

@@ -1,5 +1,7 @@
 # Fen animation
 
+animation explain the [FEN](https://en.wikipedia.org/wiki/Forsyth–Edwards_Notation) notation in chess using [ManimCE](https://github.com/ManimCommunity/manim).
+
 
 ## How to run
 

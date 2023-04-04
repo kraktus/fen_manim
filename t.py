@@ -61,7 +61,7 @@ def one_line(board) -> str:
     return board.__str__().replace("\n", "/").replace(" ", "")
 
 def colored_epd(board):
-    return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)}) #font_size=27)
+    return Text(board.epd().split(" ")[0], font="Andale Mono", t2c={str(i): BLUE for i in range(1,9)} | {'/': ORANGE}) #font_size=27)
 
 
 def one_line_bluedots(board) -> (List[Text], VGroup):
@@ -89,7 +89,7 @@ def one_line_bluedots(board) -> (List[Text], VGroup):
         if starting_dot_part is None: # We're at the beginning of a dot sequence
             starting_dot_part = x
         if starting_piece_part is not None:
-            piece_part = Text(one_line[starting_piece_part:x], font="Andale Mono")
+            piece_part = Text(one_line[starting_piece_part:x], font="Andale Mono",t2c={'/': ORANGE})
             parts.append(piece_part)
             g += piece_part
             starting_piece_part = None
@@ -143,7 +143,8 @@ def one_line_board(board_lines: List[Text]) -> VGroup:
 
 class Fen(Scene):
     def construct(self):
-        board = chess.Board(fen="rnb1k2r/1pq1bppp/p2ppn2/6B1/3NPP2/2N2Q2/PPP3PP/2KR1B1R b kq - 4 9")
+        fen = "rnb1k2r/1pq1bppp/p2ppn2/6B1/3NPP2/2N2Q2/PPP3PP/2KR1B1R b kq - 4 9"
+        board = chess.Board(fen=fen)
         empty = chess.Board(fen=None)
         with open("empty.svg", "w") as f:
             f.write(chess.svg.board(empty))
@@ -183,6 +184,34 @@ class Fen(Scene):
         board_colored_epd = replace_dots(parts)
         self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
         self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final))
+        self.play(board_colored_epd_final.animate.set_color(WHITE).shift(2 * LEFT))
+        board_brace = Brace(board_colored_epd_final, direction=UP, color=GREEN)
+        board_brace
+        board_caption = Text("Board", font="Andale Mono", color=GREEN)
+        board_caption.scale(SCALE + 0.1)
+        board_caption.next_to(board_brace, UP)
+        board_group = VGroup(board_caption, board_brace)
+        self.play(AnimationGroup(board_colored_epd_final.animate.set_color(GREEN),Write(board_caption,run_time=1),Write(board_brace, run_time=1), lag_ratio=0.4))
+        turn = Text(fen.split(" ")[1], font="Andale Mono")
+        turn.next_to(board_colored_epd_final, RIGHT)
+        turn.scale(SCALE)
+        castling = Text(fen.split(" ")[2], font="Andale Mono")
+        castling.next_to(turn, RIGHT)
+        castling.scale(SCALE)
+        ep = Text(fen.split(" ")[3])
+        ep.next_to(castling, RIGHT)
+        ep.scale(SCALE)
+        metadata = Text(" ".join(fen.split(" ")[1:], font="Andale Mono")
+        metadata.next_to(ep, RIGHT)
+        metadata.scale(SCALE)
+        self.play(
+            Succession(
+                FadeIn(turn, shift=DOWN), 
+                FadeIn(castling, shift=DOWN), 
+                FadeIn(ep, shift=DOWN), 
+                FadeIn(metadata, shift=DOWN)
+                )
+            )
 
 class Test(Scene):
     def construct(self):
@@ -219,6 +248,29 @@ class DotsTex(Scene):
         self.add(line0)
         self.wait()
         self.play(TransformMatchingTex(line0, line2))
+
+class ShiftAndColor(Scene):
+    def construct(self):
+        #Text.set_default(font="Andale Mono")
+        Text.set_default(font="Andale Mono") 
+        line0 = Text('Foo')
+        self.add(line0)
+        self.wait()
+        self.play(AnimationGroup(
+                line0.animate.set_color(YELLOW),
+                line0.animate.shift(2 * LEFT),
+                ))
+
+class BraceCreateLeft(Scene):
+    def construct(self):
+        Text.set_default(font="Andale Mono") 
+        line0 = Text('Foo')
+        brace = Brace(line0, direction=UP)
+        caption = Text("Bar")
+        caption.next_to(brace, UP)
+        self.add(line0)
+        self.wait()
+        self.play(AnimationGroup(Write(caption,run_time=1),Write(brace, run_time=1, reverse=True), lag_ratio=0.4))
 
 # def main() -> None:
 #     parser = argparse.ArgumentParser()

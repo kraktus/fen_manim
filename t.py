@@ -201,7 +201,7 @@ class Fen(Scene):
         ep = Text(fen.split(" ")[3])
         ep.next_to(castling, RIGHT)
         ep.scale(SCALE)
-        metadata = Text(" ".join(fen.split(" ")[1:], font="Andale Mono")
+        metadata = Text(" ".join(fen.split(" ")[1:]), font="Andale Mono")
         metadata.next_to(ep, RIGHT)
         metadata.scale(SCALE)
         self.play(

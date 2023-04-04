@@ -65,13 +65,14 @@ def colored_epd(board):
 
 def brace_of(x, caption: str, color, direction=UP):
     brace = Brace(x, direction=direction, color=color)
-    if direction == UP:
+    if direction.all() == UP.all():
         brace.stretch(-1,0)
     brace_caption = Text("Board", font="Andale Mono", color=color)
     brace_caption.scale(SCALE + 0.1)
     brace_caption.next_to(brace, direction)
     return brace, brace_caption
 
+# TODO, refactor must be easier way
 def one_line_bluedots(board) -> (List[Text], VGroup):
     """try to put dots in their own Text Node for finer grained animation"""
     one_line = board.__str__().replace("\n", "/").replace(" ", "")
@@ -193,11 +194,7 @@ class Fen(Scene):
         self.play(ReplacementTransform(board_anscii_oneline_blue_dot, board_colored_epd, run_time=2))
         self.play(TransformMatchingShapes(board_colored_epd, board_colored_epd_final))
         self.play(board_colored_epd_final.animate.set_color(WHITE).shift(2 * LEFT))
-        board_brace = Brace(board_colored_epd_final, direction=UP, color=GREEN)
-        board_brace.stretch(-1,0)
-        board_caption = Text("Board", font="Andale Mono", color=GREEN)
-        board_caption.scale(SCALE + 0.1)
-        board_caption.next_to(board_brace, UP)
+        board_brace, board_caption = brace_of(board_colored_epd_final, "Board", color=GREEN)
         self.play(AnimationGroup(board_colored_epd_final.animate.set_color(GREEN),Write(board_caption,run_time=1),Write(board_brace, run_time=1), lag_ratio=0.4))
         turn = Text(fen.split(" ")[1], font="Andale Mono")
         turn.next_to(board_colored_epd_final, RIGHT)
@@ -220,7 +217,6 @@ class Fen(Scene):
                 lag_ratio=0.4
                 )
             )
-        self.play()
 
 class Test(Scene):
     def construct(self):

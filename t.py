@@ -185,7 +185,6 @@ class Fen(Scene):
         parts, board_anscii_oneline_blue_dot = one_line_bluedots(board)
         board_anscii_oneline_blue_dot.scale(SCALE)
         self.play(TransformMatchingShapes(board_anscii_oneline, board_anscii_oneline_blue_dot))
-        self.add(board_anscii_oneline_blue_dot)
         board_colored_epd_final = colored_epd(board)
         board_colored_epd_final.scale(SCALE)
         board_colored_epd = replace_dots(parts)

@@ -2,6 +2,7 @@
 
 Animation explaining the [FEN](https://en.wikipedia.org/wiki/Forsyth–Edwards_Notation) notation in chess using [ManimCE](https://github.com/ManimCommunity/manim).
 
+![](https://imgur.com/a/wUsJKAE.mp4)
 
 ## How to run
 
